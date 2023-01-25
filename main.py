@@ -1,39 +1,23 @@
-import numpy as np
 import pandas as pd
 import tensorflow as tf
-from data import sentences_1, sentences_2
-from similarity_distance_algorithms import *
+from data import data
+from find_similarity_in_senteces import sentences_similarity
 
 if __name__ == '__main__':
-    jaccard_list = []
-    cosine_list = []
-    lcs_list = []
-    euclidean_list = []
-    manhattan_list = []
-    for s1, s2 in zip(sentences_1, sentences_2):
-        s1, s2 = s1.lower(), s2.lower()
-        # sw contains the list of stopwords
-        # sw = stopwords.words('english')
-        # TODO: remove stop words
-        # Jaccard
-        jaccard_list.append(Jaccard_Similarity(s1, s2))
-        # Cosine
-        cosine_list.append(cosine_similarity(s1, s2))
-        # LCS
-        lcs_list.append(LCS(s1, s2))
-        # euclidean
-        euclidean_list.append(euclidean_similarity(s1, s2))
-        # manhattan
-        manhattan_list.append(manhattan_similarity(s1, s2))
+    # READ SAMPLES FROM DATA DICT IN DATA FILE
+    # create dataframe
+    df = pd.DataFrame({'manhattan': [], 'euclidean': [], 'LCS': [],
+                       'Cosine': [], 'Jaccard': [], 'similarity': []})
 
-    df = pd.DataFrame({'manhattan': manhattan_list, 'euclidean': euclidean_list, 'LCS': lcs_list,
-                       'Cosine': cosine_list, 'Jaccard': jaccard_list, 'target': [1, 1, 0]})
-
-    print(df)
+    for sample in data.values():
+        text1, text2, similarity = sample['text1'], sample['text2'], sample['similar']
+        data_point = sentences_similarity(text1, text2)
+        data_point["similarity"] = 1 if similarity == True else 0
+        df = df.append(data_point,ignore_index=True)
+    print("DataFrame:\n",df)
     # Neural Network for binary classification with Adam optimizer
-    X = df.to_numpy()[:,:-1]
-    Y = df.to_numpy()[:,-1]
-    print(X,'y',Y)
+    X = df.to_numpy()[:, :-1]
+    Y = df.to_numpy()[:, -1]
     tf.random.set_seed(42)
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(100),  # add 100 dense neurons
@@ -42,5 +26,5 @@ if __name__ == '__main__':
     ])
     model.compile(loss=tf.keras.losses.BinaryCrossentropy(),
                   optimizer=tf.keras.optimizers.Adam(), metrics=['accuracy'])
-    model.fit(X,Y, epochs=100, verbose=0)
+    model.fit(X, Y, epochs=100, verbose=0)
     model.evaluate(X, Y)

@@ -25,6 +25,6 @@ if __name__ == '__main__':
         tf.keras.layers.Dense(1)
     ])
     model.compile(loss=tf.keras.losses.BinaryCrossentropy(),
-                  optimizer=tf.keras.optimizers.Adam(), metrics=['accuracy'])
+                  optimizer=tf.keras.optimizers.SGD(), metrics=['accuracy'])
     model.fit(X, Y, epochs=100, verbose=0)
     model.evaluate(X, Y)
